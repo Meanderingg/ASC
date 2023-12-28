@@ -19,6 +19,48 @@
 .text
 .global main
 
+numvecini:
+	
+	push %ebp
+	mov %esp, %ebp
+
+	push %ebx
+	xor %ebx, %ebx
+
+	decl %eax #elem din stanga
+	addl (%edi, %eax, 4), %ebx
+
+	addl $2, %eax #elem din dreapta
+	addl (%edi, %eax, 4), %ebx
+
+	dec %eax
+	subl nCells, %eax
+	subl $2, %eax #elementul de deasupra
+	addl (%edi, %eax, 4), %ebx
+
+	dec %eax #elem din st-sus
+	addl (%edi, %eax, 4), %ebx
+
+	addl $2, %eax #elem din dr-sus
+	addl (%edi, %eax, 4), %ebx
+
+	dec %eax
+	addl nCells, %eax
+	addl nCells, %eax
+	addl $4, %eax #elem de dedesubt
+	addl (%edi, %eax, 4), %ebx
+
+	dec %eax #elem st-jos
+	addl (%edi, %eax, 4), %ebx
+
+	addl $2, %eax #elem din dr-jos
+	addl (%edi, %eax, 4), %ebx
+
+	movl %ebx, nrvecini
+
+	pop %ebx
+	pop %ebp
+	ret
 main:
 	push $mlines
 	push $formatScanf
@@ -108,10 +150,17 @@ parcurgere_coloane:
 	inc %eax #pt a doua coloana de bordare
 
 	movl (%edi, %eax, 4), %ebx 
-	push %ebx
+
+	movl $0, nrvecini
+	push %eax
+	call numvecini
+	pop %eax #numararea vecinilor
+
+	push nrvecini #daca puneam $nrvecini imi dadea adresa de memorie, dereferentierea e o minciuna, (%edi) muta tot o adresa in %ebx
 	push $formatPrintf
 	call printf
-	addl $8, %esp
+	addl $8, %esp #afisarea numarului de vecini
+
 
 	incl j
 	jmp parcurgere_coloane 
@@ -121,6 +170,7 @@ parcurgere_linii_cont:
 	push $endl
 	call printf
 	add $4, %esp
+
 	incl i
 	jmp parcurgere_linii 
 
