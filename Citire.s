@@ -8,7 +8,7 @@
 	j: .space 4
 
 	k: .space 4
-	nriter: .space 4
+	nrvecini: .space 4
 
 	mat: .zero 1600 #initializeaza cu zero spatiul din memorie
 	mat2: .zero 1600
@@ -38,9 +38,9 @@ main:
 	movl $0, %ecx
 	movl $mat, %edi
 
-et_p:
+read_values:
 	cmp p, %ecx
-	je main_continue
+	je main_cont
 
 	push %ecx
 
@@ -51,7 +51,7 @@ et_p:
 
 	movl mlines, %eax
 	cmp x, %eax
-	jle et_exit # verificarea datelor de intrare	
+	jle exit # verificarea datelor de intrare	
 
 	push $y
 	push $formatScanf
@@ -60,7 +60,7 @@ et_p:
 
 	movl nCells, %eax
 	cmp y, %eax
-	jle et_exit # verificarea datelor de intrare	
+	jle exit # verificarea datelor de intrare	
 
 	pop %ecx
 	
@@ -76,86 +76,26 @@ et_p:
 
 	movl $1, (%edi, %eax, 4)
 	incl %ecx
-	jmp et_p
+	jmp read_values
 	
-main_continue:
+main_cont:
 
 	push $k
 	push $formatScanf
 	call scanf
 	addl $8, %esp #citirea lui k
 
-	mov mlines, %eax
-	mull nCells
-	movl %eax, nriter #numarul de iteratii pt parcurgerea matricei	
-	xor %ecx, %ecx
-
-parcurgere_celule:
-
-	cmp k , %ecx
-	je et_cont #sa fac asta de k ori, mutarea matricei 
-		
+parcurgere:
 	movl $0, i
-	push %ecx #pt a retine nr generatiei curente
-for_parcurgere_linii:
-	movl i, %ecx
-	cmp mlines, %ecx
-	je parcurgere_celule_cont
-
-	movl $0, j
-for_parcurgere_coloane:
-	movl j, %ecx
-	cmp nCells, %ecx
-	je for_parcurgere_linii_cont	
-	
-	mov i, %eax
-	inc %eax #pt a sari peste linia de bordare
-
-	mov nCells, %ebx
-	add $2, %ebx
-	mull %ebx #se adauga 2 pt cele 2 coloane de bordare
-	
-	addl j, %eax
-	inc %eax #pt a doua coloana de bordare
-
-	movl (%edi, %eax, 4), %ebx 
-	xorl %edx, %edx
-	cmp %ebx, %edx
-	je caz_zero
-
-caz_unu:
-	
-numararea_vecinilor:
-	xorl %ebx, %ebx #tinem nr de vecini vii in ebx
-	add (%edi, %eax, 4), %ebx	
-	incl j
-	jmp for_parcurgere_coloane
-caz_zero:
-
-	incl j
-	jmp for_parcurgere_coloane
-for_parcurgere_linii_cont:
-	incl i
-	jmp for_parcurgere_linii	
-	
-parcurgere_celule_cont:	
-	pop %ecx
-	incl %ecx
-	jmp parcurgere_celule
-et_cont:
-
-	movl $0, i
-
-
-for_lines:
+parcurgere_linii:
 	movl i, %ecx
 	cmp mlines, %ecx	
-	je exit	
+	je print #acolo unde sarim dupa o parcurgere	
 	movl $0, j
-for_columns:
+parcurgere_coloane:
 	movl j, %ecx
 	cmp nCells, %ecx
-	je for_lines_cont
+	je parcurgere_linii_cont 
 	
 	mov i, %eax
 	inc %eax #pt a sari peste linia de bordare
@@ -174,17 +114,60 @@ for_columns:
 	addl $8, %esp
 
 	incl j
-	jmp for_columns
+	jmp parcurgere_coloane 
 
-for_lines_cont:
+parcurgere_linii_cont:
 
 	push $endl
 	call printf
 	add $4, %esp
 	incl i
-	jmp for_lines
+	jmp parcurgere_linii 
 
-et_exit:
+
+
+print:
+	movl $0, i
+	addl $2, mlines #afisare bordare
+	addl $2, nCells #afisare bordare
+print_lines:
+	movl i, %ecx
+	cmp mlines, %ecx	
+	je exit	
+	movl $0, j
+print_columns:
+	movl j, %ecx
+	cmp nCells, %ecx
+	je print_lines_cont
+	
+	mov i, %eax
+	# inc %eax #pt a sari peste linia de bordare
+
+	mov nCells, %ebx
+	# add $2, %ebx
+	mull %ebx #se adauga 2 pt cele 2 coloane de bordare
+	
+	addl j, %eax
+	# inc %eax #pt a doua coloana de bordare
+
+	movl (%edi, %eax, 4), %ebx 
+	push %ebx
+	push $formatPrintf
+	call printf
+	addl $8, %esp
+
+	incl j
+	jmp print_columns
+
+print_lines_cont:
+
+	push $endl
+	call printf
+	add $4, %esp
+	incl i
+	jmp print_lines
+
+exit:
 	movl $1, %eax
 	movl $0, %ebx
 	int $0x80
