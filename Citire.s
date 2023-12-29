@@ -114,6 +114,51 @@ numvecini:
 	pop %ebp
 	ret
 
+copiere:
+	push %ebp
+	mov %esp, %ebp
+	
+	push %ebx
+	push i
+	push j
+
+	movl $0, i
+copiere_linii:
+	movl i, %ecx	
+	cmp mlines, %ecx
+	je copiere_exit	
+	movl $0, j
+copiere_coloane:
+	movl j, %ecx
+	cmp nCells, %ecx
+	je copiere_linii_cont	
+
+	mov i, %eax
+	inc %eax #pt a sari peste linia de bordare
+
+	mov nCells, %ebx
+	add $2, %ebx
+	mull %ebx #se adauga 2 pt cele 2 coloane de bordare
+	
+	addl j, %eax
+	inc %eax #pt a doua coloana de bordare
+	
+	movl (%esi, %eax, 4), %ebx
+	movl %ebx, (%edi, %eax, 4) 
+
+	incl j
+	jmp copiere_coloane
+copiere_linii_cont:
+	incl i
+	jmp copiere_linii
+
+copiere_exit:
+	pop j
+	pop i
+	pop %ebx 
+	pop %ebp
+	ret
+
 main:
 	push $mlines
 	push $formatScanf
@@ -182,17 +227,17 @@ main_cont:
 	addl $8, %esp #citirea lui k
 	
 	movl $0, kiter #numarul de generatii
-#k_generatii:
-#	movl kiter, %ecx
-#	cmp k, %ecx
-#	je print
+k_generatii:
+	movl kiter, %ecx
+	cmp k, %ecx
+	je print
 	
 parcurgere:
 	movl $0, i
 parcurgere_linii:
 	movl i, %ecx
 	cmp mlines, %ecx	
-	je print #acolo unde sarim dupa o parcurgere	
+	je k_generatii_cont #acolo unde sarim dupa o parcurgere	
 	movl $0, j
 parcurgere_coloane:
 	movl j, %ecx
@@ -255,7 +300,12 @@ parcurgere_linii_cont:
 	incl i
 	jmp parcurgere_linii 
 
-
+k_generatii_cont:
+	push %ecx
+	call copiere
+	pop %ecx
+	incl kiter
+	jmp k_generatii
 
 print:
 	movl $0, i
@@ -281,7 +331,7 @@ print_columns:
 	addl j, %eax
 	# inc %eax #pt a doua coloana de bordare
 
-	movl (%esi, %eax, 4), %ebx 
+	movl (%edi, %eax, 4), %ebx 
 	push %ebx
 	push $formatPrintf
 	call printf
