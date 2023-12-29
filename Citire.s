@@ -8,6 +8,7 @@
 	j: .space 4
 
 	k: .space 4
+	kiter: .space 4
 	nrvecini: .space 4
 
 	mat: .zero 1600 #initializeaza cu zero spatiul din memorie
@@ -18,6 +19,55 @@
 	endl: .asciz "\n"
 .text
 .global main
+unu:
+	push %ebp
+	movl %esp, %ebp
+
+	movl 8(%ebp), %eax
+	
+	push %ebx
+	movl nrvecini, %ebx
+subpop:
+	cmp $2, %ebx
+	jge cont_cel
+	
+	movl $0 , (%esi, %eax, 4) #punem in mat2 0
+	jmp unu_exit
+cont_cel:	
+	cmp $3, %ebx
+	jg ultrapop
+
+	movl $1, (%esi, %eax, 4) #punem in mat2 1
+	jmp unu_exit
+
+ultrapop:
+	movl $0, (%esi, %eax, 4) #punem 0 in mat2
+
+unu_exit:
+	pop %ebx
+	pop %ebp
+	ret
+
+zero:
+	push %ebp
+	mov %esp, %ebp
+
+	movl 8(%ebp), %eax #indicele emelmentului
+
+	push %ebx
+	movl nrvecini, %ebx
+creare:
+	cmp $3, %ebx
+	jne cont_cel_m
+
+	movl $1, (%esi, %eax, 4) #punem in mat2 1
+	jmp zero_exit
+cont_cel_m:
+	movl $0, (%esi, %eax, 4)
+zero_exit:
+	pop %ebx
+	pop %ebp
+	ret
 
 numvecini:
 	
@@ -26,7 +76,9 @@ numvecini:
 
 	push %ebx
 	xor %ebx, %ebx
-
+	
+	movl 8(%ebp), %eax #punem in %eax indicele elem
+		
 	decl %eax #elem din stanga
 	addl (%edi, %eax, 4), %ebx
 
@@ -61,6 +113,7 @@ numvecini:
 	pop %ebx
 	pop %ebp
 	ret
+
 main:
 	push $mlines
 	push $formatScanf
@@ -79,6 +132,7 @@ main:
 
 	movl $0, %ecx
 	movl $mat, %edi
+	movl $mat2, %esi
 
 read_values:
 	cmp p, %ecx
@@ -126,7 +180,13 @@ main_cont:
 	push $formatScanf
 	call scanf
 	addl $8, %esp #citirea lui k
-
+	
+	movl $0, kiter #numarul de generatii
+#k_generatii:
+#	movl kiter, %ecx
+#	cmp k, %ecx
+#	je print
+	
 parcurgere:
 	movl $0, i
 parcurgere_linii:
@@ -150,13 +210,34 @@ parcurgere_coloane:
 	inc %eax #pt a doua coloana de bordare
 
 	movl (%edi, %eax, 4), %ebx 
-
+	
 	movl $0, nrvecini
+	push %ecx
 	push %eax
 	call numvecini
-	pop %eax #numararea vecinilor
+	pop %eax
+	pop %ecx
 
-	push nrvecini #daca puneam $nrvecini imi dadea adresa de memorie, dereferentierea e o minciuna, (%edi) muta tot o adresa in %ebx
+	cmp $0, %ebx
+	je case_0
+case_1:
+	push %ecx
+	push %eax
+	call unu
+	pop %eax
+	pop %ecx 
+	
+	jmp if_cont
+case_0:
+	push %ecx
+	push %eax
+	call zero 
+	pop %eax
+	pop %ecx
+
+if_cont:
+
+	push %ebx #daca puneam $nrvecini imi dadea adresa de memorie, dereferentierea e o minciuna, (%edi) muta tot o adresa in %ebx
 	push $formatPrintf
 	call printf
 	addl $8, %esp #afisarea numarului de vecini
@@ -200,7 +281,7 @@ print_columns:
 	addl j, %eax
 	# inc %eax #pt a doua coloana de bordare
 
-	movl (%edi, %eax, 4), %ebx 
+	movl (%esi, %eax, 4), %ebx 
 	push %ebx
 	push $formatPrintf
 	call printf
