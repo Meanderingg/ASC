@@ -190,18 +190,18 @@ read_values:
 	call scanf
 	addl $8, %esp 
 
-	movl mlines, %eax
-	cmp x, %eax
-	jle exit # verificarea datelor de intrare	
+	#movl mlines, %eax
+	#cmp x, %eax
+	#jle exit # verificarea datelor de intrare	
 
 	push $y
 	push $formatScanf
 	call scanf
 	addl $8, %esp 
 
-	movl nCells, %eax
-	cmp y, %eax
-	jle exit # verificarea datelor de intrare	
+	#movl nCells, %eax
+	#cmp y, %eax
+	#jle exit # verificarea datelor de intrare	
 
 	pop %ecx
 	
